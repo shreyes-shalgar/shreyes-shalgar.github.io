@@ -281,9 +281,9 @@ button:active {
     text-decoration: underline;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 720px) {
     .card {
-        padding: 24px;
+        padding: clamp(16px, 4vw, 24px);
     }
 
     h1 {
