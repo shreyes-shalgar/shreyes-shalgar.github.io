@@ -112,6 +112,12 @@ function resetTracker() {
 
 // Initialize app on page load
 document.addEventListener('DOMContentLoaded', function() {
+    // Set current time as default value
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('loginTime').value = `${hours}:${minutes}`;
+    
     // Check if there's a saved login time
     const savedLoginTime = localStorage.getItem('workTrackerLoginTime');
     const savedStartDate = localStorage.getItem('workTrackerStartDate');
