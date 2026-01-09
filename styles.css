@@ -265,6 +265,22 @@ button:active {
     font-weight: 600;
 }
 
+.repo-link {
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+.repo-link a {
+    color: #bbb;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.repo-link a:hover {
+    color: #667eea;
+    text-decoration: underline;
+}
+
 @media (max-width: 480px) {
     .card {
         padding: 24px;
