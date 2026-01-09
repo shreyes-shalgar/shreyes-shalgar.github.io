@@ -47,10 +47,12 @@ function updateStats() {
     const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
     const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
     
-    // Format logout time
-    const logoutHours = String(logoutTime.getHours()).padStart(2, '0');
+    // Format logout time in 12-hour format
+    let logoutHours = logoutTime.getHours();
     const logoutMinutes = String(logoutTime.getMinutes()).padStart(2, '0');
-    const logoutTimeFormatted = `${logoutHours}:${logoutMinutes}`;
+    const ampm = logoutHours >= 12 ? 'PM' : 'AM';
+    logoutHours = logoutHours % 12 || 12;
+    const logoutTimeFormatted = `${String(logoutHours).padStart(2, '0')}:${logoutMinutes} ${ampm}`;
     
     // Update display
     document.getElementById('elapsed').textContent = 
