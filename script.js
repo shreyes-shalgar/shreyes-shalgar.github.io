@@ -36,12 +36,7 @@ function displayTracking() {
     document.getElementById('statsSection').style.display = 'grid';
     document.getElementById('progressBar').style.display = 'block';
     document.getElementById('resetBtn').style.display = 'block';
-    
-    // Disable input and button during tracking
-    document.getElementById('loginTime').disabled = true;
-    const startBtn = document.querySelector('.input-section button');
-    startBtn.disabled = true;
-    startBtn.style.opacity = '0.5';
+    document.getElementById('inputSection').style.display = 'none';
 }
 
 function updateStats() {
@@ -73,17 +68,34 @@ function updateStats() {
     logoutHours = logoutHours % 12 || 12;
     const logoutTimeFormatted = `${String(logoutHours).padStart(2, '0')}:${logoutMinutes} ${ampm}`;
     
+    // Format login time in 12-hour format
+    let loginHours = loginTime.getHours();
+    const loginMinutes = String(loginTime.getMinutes()).padStart(2, '0');
+    const loginAmpm = loginHours >= 12 ? 'PM' : 'AM';
+    loginHours = loginHours % 12 || 12;
+    const loginTimeFormatted = `${String(loginHours).padStart(2, '0')}:${loginMinutes} ${loginAmpm}`;
+    
     // Update display
     document.getElementById('elapsed').textContent = 
         `${elapsedHours}h ${elapsedMinutes}m`;
+    document.getElementById('loginTimeDisplay').textContent = loginTimeFormatted;
     document.getElementById('logoutTime').textContent = logoutTimeFormatted;
     document.getElementById('remaining').textContent = 
         remainingMs > 0 ? `${remainingHours}h ${remainingMinutes}m` : 'Work shift ended!';
     
-    // Update progress bar
+    // Update progress bars
     const totalMs = 9 * 60 * 60 * 1000; // 9 hours in milliseconds
     const progressPercentage = Math.min((elapsedMs / totalMs) * 100, 100);
+    const remainingPercentage = Math.max(((remainingMs / totalMs) * 100), 0);
+    
+    // Overall progress (time elapsed)
     document.getElementById('progressFill').style.width = progressPercentage + '%';
+    
+    // Elapsed progress bar
+    document.getElementById('elapsedFill').style.width = progressPercentage + '%';
+    
+    // Remaining progress bar
+    document.getElementById('remainingFill').style.width = remainingPercentage + '%';
     
     // Change stat cards color when work shift ends
     const statsCards = document.querySelectorAll('.stat-card');
@@ -116,6 +128,7 @@ function resetTracker() {
     document.getElementById('statsSection').style.display = 'none';
     document.getElementById('progressBar').style.display = 'none';
     document.getElementById('resetBtn').style.display = 'none';
+    document.getElementById('inputSection').style.display = 'flex';
     document.getElementById('loginTime').value = '';
     document.getElementById('loginTime').disabled = false;
     
