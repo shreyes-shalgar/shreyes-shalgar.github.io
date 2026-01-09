@@ -1,5 +1,6 @@
 let loginTimeString = null;
 let updateInterval = null;
+let shiftEndNotified = false;
 
 function startTracking() {
     const loginInput = document.getElementById('loginTime').value;
@@ -13,6 +14,11 @@ function startTracking() {
     // Save to localStorage
     localStorage.setItem('workTrackerLoginTime', loginInput);
     localStorage.setItem('workTrackerStartDate', new Date().toDateString());
+    
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
     
     displayTracking();
     
@@ -81,11 +87,21 @@ function updateStats() {
         statsCards.forEach(card => {
             card.style.background = 'linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%)';
         });
+        
+        // Send notification once when shift ends
+        if (!shiftEndNotified && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification('Work Shift Ended! 🎉', {
+                body: 'Your 9-hour work shift is complete. Time to logout!',
+                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🎉</text></svg>'
+            });
+            shiftEndNotified = true;
+        }
     }
 }
 
 function resetTracker() {
     loginTimeString = null;
+    shiftEndNotified = false;
     if (updateInterval) clearInterval(updateInterval);
     
     // Clear localStorage
@@ -132,6 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Resume tracking if login was from today
     if (savedLoginTime && savedStartDate === currentDate) {
         loginTimeString = savedLoginTime;
+        shiftEndNotified = false; // Reset notification flag
         displayTracking();
         
         // Start updating immediately and then every second
