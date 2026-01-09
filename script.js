@@ -112,11 +112,17 @@ function resetTracker() {
 
 // Initialize app on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Set current time as default value
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    document.getElementById('loginTime').value = `${hours}:${minutes}`;
+    // Always set current time as default value
+    function setCurrentTime() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('loginTime').value = `${hours}:${minutes}`;
+    }
+    
+    setCurrentTime();
+    // Update the time input every minute to keep it current
+    setInterval(setCurrentTime, 60000);
     
     // Check if there's a saved login time
     const savedLoginTime = localStorage.getItem('workTrackerLoginTime');
@@ -126,7 +132,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Resume tracking if login was from today
     if (savedLoginTime && savedStartDate === currentDate) {
         loginTimeString = savedLoginTime;
-        document.getElementById('loginTime').value = savedLoginTime;
         displayTracking();
         
         // Start updating immediately and then every second
