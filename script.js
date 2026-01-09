@@ -1,6 +1,7 @@
 let loginTimeString = null;
 let updateInterval = null;
 let shiftEndNotified = false;
+let currentTimeUpdateInterval = null;
 
 function startTracking() {
     const loginInput = document.getElementById('loginTime').value;
@@ -14,6 +15,9 @@ function startTracking() {
     // Save to localStorage
     localStorage.setItem('workTrackerLoginTime', loginInput);
     localStorage.setItem('workTrackerStartDate', new Date().toDateString());
+    
+    // Stop updating the current time when tracking starts
+    if (currentTimeUpdateInterval) clearInterval(currentTimeUpdateInterval);
     
     // Request notification permission
     if ('Notification' in window && Notification.permission === 'default') {
@@ -103,6 +107,7 @@ function resetTracker() {
     loginTimeString = null;
     shiftEndNotified = false;
     if (updateInterval) clearInterval(updateInterval);
+    if (currentTimeUpdateInterval) clearInterval(currentTimeUpdateInterval);
     
     // Clear localStorage
     localStorage.removeItem('workTrackerLoginTime');
@@ -124,22 +129,21 @@ function resetTracker() {
     statsCards.forEach(card => {
         card.style.background = 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)';
     });
+    
+    // Restart updating current time
+    setCurrentTime();
+    currentTimeUpdateInterval = setInterval(setCurrentTime, 60000);
+}
+
+function setCurrentTime() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('loginTime').value = `${hours}:${minutes}`;
 }
 
 // Initialize app on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Always set current time as default value
-    function setCurrentTime() {
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        document.getElementById('loginTime').value = `${hours}:${minutes}`;
-    }
-    
-    setCurrentTime();
-    // Update the time input every minute to keep it current
-    setInterval(setCurrentTime, 60000);
-    
     // Check if there's a saved login time
     const savedLoginTime = localStorage.getItem('workTrackerLoginTime');
     const savedStartDate = localStorage.getItem('workTrackerStartDate');
@@ -148,6 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Resume tracking if login was from today
     if (savedLoginTime && savedStartDate === currentDate) {
         loginTimeString = savedLoginTime;
+        document.getElementById('loginTime').value = savedLoginTime;
         shiftEndNotified = false; // Reset notification flag
         displayTracking();
         
@@ -155,6 +160,10 @@ document.addEventListener('DOMContentLoaded', function() {
         updateStats();
         if (updateInterval) clearInterval(updateInterval);
         updateInterval = setInterval(updateStats, 1000);
+    } else {
+        // Only show and update current time if tracking hasn't started
+        setCurrentTime();
+        currentTimeUpdateInterval = setInterval(setCurrentTime, 60000);
     }
     
     // Allow Enter key to start tracking
