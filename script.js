@@ -80,8 +80,18 @@ function updateStats() {
         `${elapsedHours}h ${elapsedMinutes}m`;
     document.getElementById('loginTimeDisplay').textContent = loginTimeFormatted;
     document.getElementById('logoutTime').textContent = logoutTimeFormatted;
-    document.getElementById('remaining').textContent = 
-        remainingMs > 0 ? `${remainingHours}h ${remainingMinutes}m` : 'Work shift ended!';
+    
+    // Calculate and display remaining time or overtime
+    if (remainingMs > 0) {
+        document.getElementById('remaining').innerHTML = `${remainingHours}h ${remainingMinutes}m`;
+        document.getElementById('remainingLabel').textContent = 'Time Remaining';
+    } else {
+        const overtimeMs = Math.abs(remainingMs);
+        const overtimeHours = Math.floor(overtimeMs / (1000 * 60 * 60));
+        const overtimeMinutes = Math.floor((overtimeMs % (1000 * 60 * 60)) / (1000 * 60));
+        document.getElementById('remaining').innerHTML = 
+            `-${overtimeHours}h ${overtimeMinutes}m<br><small style="font-size: 14px;">Work shift ended!</small>`;
+    }
     
     // Update progress bars
     const totalMs = 9 * 60 * 60 * 1000; // 9 hours in milliseconds
@@ -97,12 +107,11 @@ function updateStats() {
     // Remaining progress bar
     document.getElementById('remainingFill').style.width = remainingPercentage + '%';
     
-    // Change stat cards color when work shift ends
-    const statsCards = document.querySelectorAll('.stat-card');
+    // Change card colors based on shift status
+    const remainingCard = document.getElementById('remainingCard');
     if (remainingMs <= 0) {
-        statsCards.forEach(card => {
-            card.style.background = 'linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%)';
-        });
+        // Change remaining/overtime card to red/orange gradient
+        remainingCard.style.background = 'linear-gradient(135deg, #d38181 0%, #d86877 100%)';
         
         // Send notification once when shift ends
         if (!shiftEndNotified && 'Notification' in window && Notification.permission === 'granted') {
@@ -112,6 +121,9 @@ function updateStats() {
             });
             shiftEndNotified = true;
         }
+    } else {
+        // Reset to default color when time remaining
+        remainingCard.style.background = 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)';
     }
 }
 
@@ -137,11 +149,11 @@ function resetTracker() {
     startBtn.disabled = false;
     startBtn.style.opacity = '1';
     
-    // Reset stat card backgrounds
-    const statsCards = document.querySelectorAll('.stat-card');
-    statsCards.forEach(card => {
-        card.style.background = 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)';
-    });
+    // Reset the remaining card background
+    document.getElementById('remainingCard').style.background = 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)';
+    
+    // Reset the label back to "Time Remaining"
+    document.getElementById('remainingLabel').textContent = 'Time Remaining';
     
     // Restart updating current time
     setCurrentTime();
