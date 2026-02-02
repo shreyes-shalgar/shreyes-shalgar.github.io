@@ -7,14 +7,76 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="hamburger-menu" id="hamburgerMenu" onclick="toggleMenu()">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+    </div>
+    
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+    
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-header">
+            <h3>Menu</h3>
+            <button class="close-menu-btn" onclick="closeMenu()">×</button>
+        </div>
+        <div class="menu-content">
+            <button class="menu-item" onclick="openWorkingHoursSettings(); closeMenu();">
+                <span class="menu-icon">⚙️</span>
+                <span>Working Hours Settings</span>
+            </button>
+            <button class="menu-item" onclick="exportToExcel(); closeMenu();">
+                <span class="menu-icon">📊</span>
+                <span>Export Report</span>
+            </button>
+            <button class="menu-item" onclick="clearAllData(); closeMenu();">
+                <span class="menu-icon">🗑️</span>
+                <span>Clear All Data</span>
+            </button>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="settingsModalOverlay" onclick="closeWorkingHoursSettings()"></div>
+    
+    <div class="settings-modal" id="settingsModal">
+        <div class="modal-header">
+            <h3>Working Hours Settings</h3>
+            <button class="close-modal-btn" onclick="closeWorkingHoursSettings()">×</button>
+        </div>
+        <div class="modal-body">
+            <label for="workingHours">Daily Working Hours</label>
+            <input type="number" id="workingHours" min="1" max="24" step="0.5" placeholder="9">
+            <p class="modal-hint">Set your required daily working hours (e.g., 9 for 9 hours)</p>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" onclick="closeWorkingHoursSettings()">Cancel</button>
+            <button class="modal-btn save-btn" onclick="saveWorkingHours()">Save</button>
+        </div>
+    </div>
+
     <div class="container">
         <div class="card">
             <h1>Work Hours Tracker</h1>
             
             <div class="input-section" id="inputSection">
+                <div class="balance-preview" id="balancePreview" style="display: none;">
+                    <div class="balance-preview-content">
+                        <span class="balance-preview-label">Previous Balance:</span>
+                        <span class="balance-preview-value" id="balancePreviewValue">0h 0m</span>
+                    </div>
+                    <button class="clear-balance-btn" onclick="clearBalance()" title="Clear balance">×</button>
+                </div>
                 <label for="loginTime">Login Time <span class="hint">(Click to change)</span></label>
                 <input type="time" id="loginTime" placeholder="HH:MM">
-                <button onclick="startTracking()">Start Tracking</button>
+                <button onclick="startTracking()">Login in Office</button>
+            </div>
+
+            <div class="balance-section" id="balanceSection" style="display: none;">
+                <div class="stat-card balance-card" id="balanceCard">
+                    <div class="stat-label">Time Balance (Carry Forward)</div>
+                    <div class="stat-value balance-value" id="balance">0h 0m</div>
+                    <div class="balance-info" id="balanceInfo">No pending dues or credits</div>
+                </div>
             </div>
 
             <div class="stats-section" id="statsSection" style="display: none;">
@@ -23,7 +85,7 @@
                     <div class="stat-value" id="loginTimeDisplay">--:--</div>
                 </div>
                 <div class="stat-card-half">
-                    <div class="stat-label">Logout Time</div>
+                    <div class="stat-label">Adjusted Logout</div>
                     <div class="stat-value" id="logoutTime">--:--</div>
                 </div>
                 <div class="stat-card">
@@ -50,7 +112,12 @@
                 </div>
             </div>
 
-            <button class="reset-btn" onclick="resetTracker()" id="resetBtn" style="display: none;">Reset</button>
+            <div class="tracking-buttons" id="trackingButtons" style="display: none;">
+                <button class="logout-btn" onclick="logoutTracker()">
+                    <span class="btn-icon">🚪</span> Logout
+                </button>
+                <button class="reset-btn" onclick="resetTracker()">Reset</button>
+            </div>
         </div>
 
         <footer class="footer">
