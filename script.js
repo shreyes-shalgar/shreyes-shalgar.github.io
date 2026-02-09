@@ -1,7 +1,25 @@
+// DOM Cache for performance - queried once at initialization
+const domElements = {
+    elapsed: null,
+    loginTimeDisplay: null,
+    logoutTime: null,
+    remaining: null,
+    remainingLabel: null,
+    remainingCard: null,
+    progressFill: null,
+    elapsedFill: null,
+    remainingFill: null,
+    statsSection: null
+};
+
 let loginTimeString = null;
 let updateInterval = null;
 let shiftEndNotified = false;
 let currentTimeUpdateInterval = null;
+let lastUpdateTime = 0;
+let lastProgressPercentage = -1;
+let lastRemainingPercentage = -1;
+const UPDATE_THROTTLE = 150; // Throttle DOM updates to 150ms
 
 // Time balance tracking (in milliseconds) - carries forward to next day
 function getTimeBalance() {
@@ -215,6 +233,13 @@ function displayTracking() {
 
 function updateStats() {
     const now = new Date();
+    const currentTime = now.getTime();
+    
+    // Throttle DOM updates to avoid excessive reflows
+    if (currentTime - lastUpdateTime < UPDATE_THROTTLE && lastProgressPercentage !== -1) {
+        return;
+    }
+    lastUpdateTime = currentTime;
     
     // Get first login time of the day
     const firstLoginTime = localStorage.getItem('firstLoginTime') || loginTimeString;
@@ -224,26 +249,25 @@ function updateStats() {
     const loginTime = new Date();
     loginTime.setHours(hours, minutes, 0, 0);
     
-    // Get current balance and adjust required work time
-    const currentBalance = getTimeBalance();
+    // Pre-calculate constants to avoid repeated calculations
+    const MS_PER_HOUR = 3600000;
+    const MS_PER_MINUTE = 60000;
     const dailyAdjustedWorkMs = parseInt(localStorage.getItem('dailyAdjustedWorkMs'));
-    
-    // Use the daily adjusted work time (calculated once at start of day)
     const workingHours = getWorkingHours();
-    const adjustedWorkMs = dailyAdjustedWorkMs || (workingHours * 60 * 60 * 1000);
+    const adjustedWorkMs = dailyAdjustedWorkMs || (workingHours * MS_PER_HOUR);
     
     // Calculate logout time (first login + adjusted work time)
     const logoutTime = new Date(loginTime.getTime() + adjustedWorkMs);
     
     // Calculate elapsed time from first login to now
     const elapsedMs = now - loginTime;
-    const elapsedHours = Math.floor(elapsedMs / (1000 * 60 * 60));
-    const elapsedMinutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+    const elapsedHours = Math.floor(elapsedMs / MS_PER_HOUR);
+    const elapsedMinutes = Math.floor((elapsedMs % MS_PER_HOUR) / MS_PER_MINUTE);
     
     // Calculate remaining time
     const remainingMs = logoutTime - now;
-    const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
-    const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+    const remainingHours = Math.floor(remainingMs / MS_PER_HOUR);
+    const remainingMinutes = Math.floor((remainingMs % MS_PER_HOUR) / MS_PER_MINUTE);
     
     // Format logout time in 12-hour format
     let logoutHours = logoutTime.getHours();
@@ -259,60 +283,69 @@ function updateStats() {
     loginHours = loginHours % 12 || 12;
     const loginTimeFormatted = `${String(loginHours).padStart(2, '0')}:${loginMinutes} ${loginAmpm}`;
     
-    // Update display
-    document.getElementById('elapsed').textContent = 
-        `${elapsedHours}h ${elapsedMinutes}m`;
-    document.getElementById('loginTimeDisplay').textContent = loginTimeFormatted;
-    document.getElementById('logoutTime').textContent = logoutTimeFormatted;
+    // Batch DOM updates using cached elements - only if they're cached
+    if (!domElements.elapsed) domElements.elapsed = document.getElementById('elapsed');
+    if (!domElements.loginTimeDisplay) domElements.loginTimeDisplay = document.getElementById('loginTimeDisplay');
+    if (!domElements.logoutTime) domElements.logoutTime = document.getElementById('logoutTime');
+    if (!domElements.remaining) domElements.remaining = document.getElementById('remaining');
+    if (!domElements.remainingLabel) domElements.remainingLabel = document.getElementById('remainingLabel');
+    if (!domElements.remainingCard) domElements.remainingCard = document.getElementById('remainingCard');
+    if (!domElements.progressFill) domElements.progressFill = document.getElementById('progressFill');
+    if (!domElements.elapsedFill) domElements.elapsedFill = document.getElementById('elapsedFill');
+    if (!domElements.remainingFill) domElements.remainingFill = document.getElementById('remainingFill');
+    
+    if (domElements.elapsed) domElements.elapsed.textContent = `${elapsedHours}h ${elapsedMinutes}m`;
+    if (domElements.loginTimeDisplay) domElements.loginTimeDisplay.textContent = loginTimeFormatted;
+    if (domElements.logoutTime) domElements.logoutTime.textContent = logoutTimeFormatted;
+    
+    // Calculate progress percentages
+    const progressPercentage = Math.min((elapsedMs / adjustedWorkMs) * 100, 100);
+    const remainingPercentage = Math.max(((remainingMs / adjustedWorkMs) * 100), 0);
+    
+    // Only update progress bars if values changed significantly (reduces reflows)
+    if (Math.abs(progressPercentage - lastProgressPercentage) > 0.5) {
+        const progressStr = progressPercentage + '%';
+        if (domElements.progressFill) domElements.progressFill.style.width = progressStr;
+        if (domElements.elapsedFill) domElements.elapsedFill.style.width = progressStr;
+        lastProgressPercentage = progressPercentage;
+    }
+    
+    if (Math.abs(remainingPercentage - lastRemainingPercentage) > 0.5) {
+        if (domElements.remainingFill) domElements.remainingFill.style.width = remainingPercentage + '%';
+        lastRemainingPercentage = remainingPercentage;
+    }
     
     // Calculate and display remaining time or overtime
     if (remainingMs > 0) {
-        document.getElementById('remaining').innerHTML = `${remainingHours}h ${remainingMinutes}m`;
-        document.getElementById('remainingLabel').textContent = 'Time Remaining';
+        if (domElements.remaining) domElements.remaining.textContent = `${remainingHours}h ${remainingMinutes}m`;
+        if (domElements.remainingLabel) domElements.remainingLabel.textContent = 'Time Remaining';
+        if (domElements.remainingCard) domElements.remainingCard.style.background = 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)';
     } else {
         const overtimeMs = Math.abs(remainingMs);
-        const overtimeHours = Math.floor(overtimeMs / (1000 * 60 * 60));
-        const overtimeMinutes = Math.floor((overtimeMs % (1000 * 60 * 60)) / (1000 * 60));
-        document.getElementById('remaining').innerHTML = 
-            `-${overtimeHours}h ${overtimeMinutes}m<br><small style="font-size: 14px;">Work shift ended!</small>`;
-    }
-    
-    // Update progress bars
-    const totalMs = adjustedWorkMs; // Use adjusted work time for progress calculation
-    const progressPercentage = Math.min((elapsedMs / totalMs) * 100, 100);
-    const remainingPercentage = Math.max(((remainingMs / totalMs) * 100), 0);
-    
-    // Overall progress (time elapsed)
-    document.getElementById('progressFill').style.width = progressPercentage + '%';
-    
-    // Elapsed progress bar
-    document.getElementById('elapsedFill').style.width = progressPercentage + '%';
-    
-    // Remaining progress bar
-    document.getElementById('remainingFill').style.width = remainingPercentage + '%';
-    
-    // Change card colors based on shift status
-    const remainingCard = document.getElementById('remainingCard');
-    if (remainingMs <= 0) {
+        const overtimeHours = Math.floor(overtimeMs / MS_PER_HOUR);
+        const overtimeMinutes = Math.floor((overtimeMs % MS_PER_HOUR) / MS_PER_MINUTE);
+        if (domElements.remaining) domElements.remaining.innerHTML = `-${overtimeHours}h ${overtimeMinutes}m<br><small style="font-size: 14px;">Work shift ended!</small>`;
+        
         // Change remaining/overtime card to red/orange gradient
-        remainingCard.style.background = 'linear-gradient(135deg, #d38181 0%, #d86877 100%)';
+        if (domElements.remainingCard) domElements.remainingCard.style.background = 'linear-gradient(135deg, #d38181 0%, #d86877 100%)';
         
         // Send notification once when shift ends
         if (!shiftEndNotified && 'Notification' in window && Notification.permission === 'granted') {
-            const workingHours = getWorkingHours();
             new Notification('Work Shift Ended! 🎉', {
                 body: `Your ${workingHours}-hour work shift is complete. Time to logout!`,
                 icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🎉</text></svg>'
             });
             shiftEndNotified = true;
         }
-    } else {
-        // Reset to default color when time remaining
-        remainingCard.style.background = 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)';
     }
 }
 
 function logoutTracker() {
+    // Reset throttle values
+    lastProgressPercentage = -1;
+    lastRemainingPercentage = -1;
+    lastUpdateTime = 0;
+    
     // Calculate and save the balance before logging out
     if (loginTimeString) {
         const now = new Date();
@@ -502,6 +535,9 @@ function resetTracker() {
     
     loginTimeString = null;
     shiftEndNotified = false;
+    lastUpdateTime = 0;
+    lastProgressPercentage = -1;
+    lastRemainingPercentage = -1;
     if (updateInterval) clearInterval(updateInterval);
     if (currentTimeUpdateInterval) clearInterval(currentTimeUpdateInterval);
     

@@ -14,6 +14,7 @@ body {
     justify-content: center;
     align-items: center;
     padding: clamp(10px, 5vw, 40px);
+    contain: layout style paint;
 }
 
 .hamburger-menu {
@@ -32,7 +33,8 @@ body {
     cursor: pointer;
     z-index: 1000;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    contain: layout style;
 }
 
 .hamburger-menu:hover {
@@ -87,10 +89,12 @@ body {
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
     z-index: 1001;
-    transition: right 0.3s ease;
+    transition: right 0.2s ease;
     box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
+    contain: layout style;
+    will-change: right;
 }
 
 .side-menu.active {
@@ -352,7 +356,8 @@ h1 {
 
 .balance-section {
     margin-bottom: clamp(16px, 3vw, 20px);
-    animation: slideIn 0.5s ease;
+    animation: slideIn 0.3s ease forwards;
+    contain: layout style;
 }
 
 .balance-card {
@@ -360,8 +365,9 @@ h1 {
     padding: clamp(16px, 3vw, 20px);
     border-radius: 15px;
     text-align: center;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     border: 2px solid rgba(102, 126, 234, 0.2);
+    contain: layout style;
 }
 
 .balance-value {
@@ -420,8 +426,9 @@ h1 {
     font-size: 20px;
     font-weight: bold;
     padding: 0;
-    transition: all 0.3s ease;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
     line-height: 1;
+    contain: layout style;
 }
 
 .clear-balance-btn:hover {
@@ -461,12 +468,13 @@ input[type="time"] {
     border: 2px solid #e0e0e0;
     border-radius: 10px;
     font-size: 16px;
-    transition: all 0.3s ease;
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
     font-family: 'Courier New', monospace;
     cursor: pointer;
     background-color: #fff;
     color: #333;
     min-height: 44px;
+    contain: layout style;
 }
 
 input[type="time"]:hover {
@@ -488,9 +496,10 @@ button {
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    contain: layout style;
 }
 
 button:hover {
@@ -512,7 +521,9 @@ button:active {
     grid-template-columns: 1fr 1fr;
     gap: clamp(12px, 2vw, 16px);
     margin-bottom: clamp(20px, 4vw, 24px);
-    animation: slideIn 0.5s ease;
+    animation: slideIn 0.3s ease forwards;
+    contain: layout style;
+    will-change: opacity, transform;
 }
 
 @keyframes slideIn {
@@ -531,8 +542,9 @@ button:active {
     padding: clamp(16px, 3vw, 24px);
     border-radius: 15px;
     text-align: center;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     grid-column: 1 / -1;
+    contain: layout style;
 }
 
 .stat-card-half {
@@ -540,7 +552,8 @@ button:active {
     padding: clamp(16px, 3vw, 24px);
     border-radius: 15px;
     text-align: center;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    contain: layout style;
 }
 
 .stat-card:hover,
@@ -577,13 +590,16 @@ button:active {
     border-radius: 10px;
     overflow: hidden;
     margin-top: 12px;
+    contain: layout style;
 }
 
 .progress-fill {
     height: 100%;
     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
     border-radius: 10px;
-    transition: width 0.1s linear;
+    transition: width 0.08s linear;
+    will-change: width;
+    contain: layout;
 }
 
 .elapsed-bar {
@@ -611,7 +627,9 @@ button:active {
     padding: 20px;
     border-radius: 15px;
     margin-bottom: 24px;
-    animation: slideIn 0.5s ease;
+    animation: slideIn 0.3s ease forwards;
+    contain: layout style;
+    will-change: opacity, transform;
 }
 
 .progress-label {
@@ -635,7 +653,8 @@ button:active {
     display: flex;
     gap: 12px;
     margin-bottom: 16px;
-    animation: slideIn 0.5s ease;
+    animation: slideIn 0.3s ease forwards;
+    contain: layout style;
 }
 
 .logout-btn {
@@ -699,7 +718,9 @@ button:active {
     font-weight: 600;
     font-size: 14px;
     z-index: 1000;
-    animation: slideInRight 0.5s ease, fadeOut 0.5s ease 2.5s;
+    animation: slideInRight 0.3s ease, fadeOut 0.3s ease 2.5s;
+    contain: layout style;
+    will-change: transform, opacity;
 }
 
 @keyframes slideInRight {
